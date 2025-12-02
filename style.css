@@ -1,9 +1,8 @@
 :root{
   --primary: #2fbf73;
-  --muted: #f5f5f5;
   --text: #333;
   --accent: #e74c3c;
-  --cell-height: 120px;
+  --cell-height: 110px;
 }
 *{ box-sizing: border-box; }
 body{
@@ -41,7 +40,6 @@ header{
   border-radius:6px;
   cursor:pointer;
 }
-.btn:active{ transform: translateY(1px); }
 .btn-primary{
   background:var(--primary);
   color:#fff;
@@ -56,91 +54,29 @@ header{
 .month-title{
   font-weight:700;
   margin:0 8px;
-  min-width:120px;
+  min-width:140px;
   text-align:center;
 }
 
-/* 月曆表格 */
-.calendar{
-  padding: 12px 20px 40px 20px;
-  min-height: 420px;
-}
+/* 日曆 */
+.calendar{ padding: 12px 20px 40px 20px; min-height: 420px; }
 
-.weekday-row{
-  display:grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align:center;
-  color:#888;
-  padding:8px 0;
-  border-bottom:1px solid #f0f0f0;
-  margin-bottom:8px;
-}
-
-/* gridContainer 包含多個 .row（每列為一週） */
-.grid{
-  display:block;
-}
-
-/* 每列以 grid 呈現 7 欄 */
-.row{
-  display:grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-/* 每個 cell */
-.cell{
-  min-height: var(--cell-height);
-  border-top:1px solid #f5f5f5;
-  border-right:1px solid #f5f5f5;
-  padding:8px;
-  box-sizing:border-box;
-  position:relative;
-  background:#fff;
-}
+.weekday-row{ display:grid; grid-template-columns: repeat(7,1fr); text-align:center; color:#888; padding:8px 0; border-bottom:1px solid #f0f0f0; margin-bottom:8px; }
+.grid{ display:block; }
+.row{ display:grid; grid-template-columns: repeat(7,1fr); }
+.cell{ min-height: var(--cell-height); border-top:1px solid #f5f5f5; border-right:1px solid #f5f5f5; padding:8px; position:relative; background:#fff; }
 .row .cell:nth-child(7n){ border-right:none; }
-
-.date-num{
-  position:absolute;
-  top:6px;
-  left:8px;
-  font-size:14px;
-  color:#666;
-}
+.date-num{ position:absolute; top:6px; left:8px; font-size:14px; color:#666; }
 .date-num.holiday{ color:var(--accent); }
+.cell.outside-month .date-num{ color:#cfcfcf; }
+.event{ display:block; background:var(--accent); color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; margin-top:28px; max-width:90%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-.cell.outside-month .date-num{
-  color:#cfcfcf;
-}
-
-/* 事件條 */
-.event{
-  display:block;
-  background:var(--accent);
-  color:#fff;
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-  margin-top:28px;
-  max-width:90%;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-/* 月/週檢視樣式 */
-.view-toggle{
-  display:flex;
-  gap:6px;
-}
-
-/* 週檢視：隱藏其他列 */
+/* 週檢視隱藏列 */
 .week-view .row{ display:none; }
 .week-view .row.visible{ display:grid; grid-template-columns: repeat(7,1fr); }
 
-/* 手機響應 */
+/* 手機 */
 @media (max-width:720px){
-  :root{ --cell-height: 100px; }
+  :root{ --cell-height: 90px; }
   .brand span{ display:none; }
-  header{ padding:8px; }
-  .calendar{ padding:8px; }
 }

@@ -1,30 +1,32 @@
-// 使用 defer 或在 DOMContentLoaded 執行，index.html 使用 defer 引入本檔，確保 DOM 已可用
-
-// 範例事件資料
+// 範例事件
 const events = [
   { date: "2026-01-01", title: "中華民國開國紀念日" },
   { date: "2026-01-01", title: "元旦" },
   { date: "2026-01-21", title: "某活動" }
 ];
 
-// 工具：Date -> YYYY-MM-DD
-function toISODate(d){
+function toISO(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
   return `y−{y}-y−{m}-${day}`;
 }
 
-// 日曆狀態
-let current = new Date();
-current.setHours(0,0,0,0);
+function startOfWeek(d){
+  const s = new Date(d);
+  s.setHours(0,0,0,0);
+  s.setDate(d.getDate() - d.getDay()); // 週日為起始
+  return s;
+}
+function addDays(d,n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 
-// 示範：初始顯示 2026-01（方便比對）
-current = new Date(2026,0,1);
-
-let viewMode = 'month'; // or 'week'
+// 狀態
+let current = new Date(2026,0,1); // 初始顯示 2026-01
+let viewMode = 'month';
 let selectedWeekStart = null;
 
+// DOM
 const gridContainer = document.getElementById('gridContainer');
 const titleEl = document.getElementById('title');
 const prevBtn = document.getElementById('prevBtn');
@@ -34,68 +36,47 @@ const monthViewBtn = document.getElementById('monthViewBtn');
 const weekViewBtn = document.getElementById('weekViewBtn');
 const calendarRoot = document.getElementById('calendarRoot');
 
-function startOfWeek(d){
-  // 以週日為一週起始
-  const s = new Date(d);
-  s.setHours(0,0,0,0);
-  s.setDate(d.getDate() - d.getDay());
-  return s;
-}
-function addDays(d,n){
-  const r = new Date(d);
-  r.setDate(r.getDate()+n);
-  return r;
-}
-function sameDay(a,b){
-  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+function renderTitle(){
+  const y = current.getFullYear();
+  const mIndex = current.getMonth(); // 0-based
+  // 正確顯示：不要在 HTML 使用佔位符；用 JS 直接填入 textContent
+  titleEl.textContent = `y年{y}年y年{mIndex + 1}月`;
 }
 
 function renderCalendar(){
-  // 清空
   gridContainer.innerHTML = '';
+  renderTitle();
 
   const year = current.getFullYear();
   const month = current.getMonth();
-  titleEl.textContent = `year年{year}年year年{month+1}月`;
-
-  // 該月第一日
   const firstOfMonth = new Date(year, month, 1);
-  const startDate = startOfWeek(firstOfMonth); // 該週的週日作為起點
+  const startDate = startOfWeek(firstOfMonth);
 
-  // 產生 6 × 7 = 42 個日期格
-  const total = 42;
+  // 42 格
   const dates = [];
-  for(let i=0;i<total;i++){
-    dates.push(addDays(startDate, i));
-  }
+  for(let i=0;i<42;i++) dates.push(addDays(startDate, i));
 
-  // 分成 6 列 (每列 7 個)
+  // 6 列
   for(let r=0;r<6;r++){
-    const rowDates = dates.slice(r*7, r*7+7);
+    const week = dates.slice(r*7, r*7+7);
     const row = document.createElement('div');
     row.className = 'row';
 
-    // 根據 viewMode 決定是否 visible（週檢視）
     if(viewMode === 'week'){
       if(!selectedWeekStart){
-        // 找到第一個包含當前月的列作為預設 selectedWeekStart
-        if(rowDates.some(d => d.getMonth() === month && d.getFullYear() === year)){
-          selectedWeekStart = startOfWeek(rowDates[0]);
+        if(week.some(d => d.getMonth() === month && d.getFullYear() === year)){
+          selectedWeekStart = startOfWeek(week[0]);
         }
       }
-      if(selectedWeekStart && sameDay(startOfWeek(rowDates[0]), selectedWeekStart)){
+      if(selectedWeekStart && sameDay(startOfWeek(week[0]), selectedWeekStart)){
         row.classList.add('visible');
-      } else {
-        row.classList.remove('visible');
       }
     }
 
-    // 產生每個 cell
-    rowDates.forEach(d => {
+    week.forEach(d => {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.dataset.date = toISODate(d);
-
+      cell.dataset.date = toISO(d);
       if(d.getMonth() !== month) cell.classList.add('outside-month');
 
       const dn = document.createElement('div');
@@ -104,16 +85,13 @@ function renderCalendar(){
       if(d.getDay() === 0) dn.classList.add('holiday');
       cell.appendChild(dn);
 
-      // 加入事件（若有）
-      const iso = toISODate(d);
-      events.filter(e => e.date === iso).forEach(ev => {
+      events.filter(e => e.date === toISO(d)).forEach(ev => {
         const evEl = document.createElement('span');
         evEl.className = 'event';
         evEl.textContent = ev.title;
         cell.appendChild(evEl);
       });
 
-      // 點擊行為
       cell.addEventListener('click', () => {
         const clicked = new Date(cell.dataset.date);
         if(viewMode === 'week'){
@@ -130,52 +108,18 @@ function renderCalendar(){
     gridContainer.appendChild(row);
   }
 
-  // 切換 class（供 CSS 控制週檢視）
-  if(viewMode === 'week'){
-    calendarRoot.classList.add('week-view');
-  } else {
-    calendarRoot.classList.remove('week-view');
-  }
+  if(viewMode === 'week') calendarRoot.classList.add('week-view'); else calendarRoot.classList.remove('week-view');
 }
 
-// 控制函式
-function goToToday(){
-  const now = new Date();
-  current = new Date(now.getFullYear(), now.getMonth(), 1);
-  selectedWeekStart = null;
-  renderCalendar();
-}
-function prevMonth(){
-  current = new Date(current.getFullYear(), current.getMonth()-1, 1);
-  selectedWeekStart = null;
-  renderCalendar();
-}
-function nextMonth(){
-  current = new Date(current.getFullYear(), current.getMonth()+1, 1);
-  selectedWeekStart = null;
-  renderCalendar();
-}
-function setView(mode){
-  viewMode = mode;
-  if(mode === 'month'){
-    monthViewBtn.classList.add('btn-primary');
-    weekViewBtn.classList.remove('btn-primary');
-    selectedWeekStart = null;
-  } else {
-    weekViewBtn.classList.add('btn-primary');
-    monthViewBtn.classList.remove('btn-primary');
-    if(!selectedWeekStart){
-      const firstOfMonth = new Date(current.getFullYear(), current.getMonth(), 1);
-      selectedWeekStart = startOfWeek(firstOfMonth);
-    }
-  }
-  renderCalendar();
-}
+// control
+function goToday(){ const now = new Date(); current = new Date(now.getFullYear(), now.getMonth(), 1); selectedWeekStart = null; renderCalendar(); }
+function prevMonth(){ current = new Date(current.getFullYear(), current.getMonth()-1, 1); selectedWeekStart = null; renderCalendar(); }
+function nextMonth(){ current = new Date(current.getFullYear(), current.getMonth()+1, 1); selectedWeekStart = null; renderCalendar(); }
+function setView(mode){ viewMode = mode; if(mode === 'month'){ monthViewBtn.classList.add('btn-primary'); weekViewBtn.classList.remove('btn-primary'); selectedWeekStart = null; } else { weekViewBtn.classList.add('btn-primary'); monthViewBtn.classList.remove('btn-primary'); if(!selectedWeekStart) selectedWeekStart = startOfWeek(new Date(current.getFullYear(), current.getMonth(), 1)); } renderCalendar(); }
 
-// 綁定事件
 prevBtn.addEventListener('click', prevMonth);
 nextBtn.addEventListener('click', nextMonth);
-todayBtn.addEventListener('click', goToToday);
+todayBtn.addEventListener('click', goToday);
 monthViewBtn.addEventListener('click', () => setView('month'));
 weekViewBtn.addEventListener('click', () => setView('week'));
 

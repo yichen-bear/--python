@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>月曆範例（修正）</title>
+  <title>月曆範例（修正標題）</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <header>
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2s6 3 6 9-6 11-6 11-6-4-6-11 6-9 6-9z" fill="#2fbf73"/></svg>
@@ -19,7 +18,8 @@
         <button id="todayBtn" class="btn">今天</button>
         <button id="prevBtn" class="btn" aria-label="上一個月">&lt;</button>
         <button id="nextBtn" class="btn" aria-label="下一個月">&gt;</button>
-        <div class="month-title" id="title">2026年1月</div>
+        <!-- 這裡不要放 {year} 或 {month+1} 之類的佔位符 -->
+        <div class="month-title" id="title"></div>
       </div>
 
       <div class="view-toggle">
@@ -30,7 +30,7 @@
   </header>
 
   <main class="calendar" id="calendarRoot">
-    <div class="weekday-row" aria-hidden="false">
+    <div class="weekday-row">
       <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
     </div>
 
