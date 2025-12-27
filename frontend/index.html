@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每周行事曆與忙碌程度視覺化</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+
+<body>
+    <!-- 登入/註冊模態框 -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-circle"></i> 用戶登入</h2>
+                <span class="close">&times;</span>
+            </div>
+            
+            <div class="auth-tabs">
+                <button id="loginTab" class="auth-tab active">登入</button>
+                <button id="registerTab" class="auth-tab">註冊</button>
+            </div>
+            
+            <!-- 登入表單 -->
+            <form id="loginForm" class="auth-form active-form">
+                <div class="form-group">
+                    <label for="loginEmail"><i class="fas fa-envelope"></i> 電子郵件</label>
+                    <input type="email" id="loginEmail" placeholder="輸入電子郵件">
+                </div>
+            
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fas fa-lock"></i> 密碼</label>
+                    <input type="password" id="loginPassword" placeholder="輸入密碼">
+                </div>
+            
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> 登入
+                </button>
+            </form>
+            
+            <!-- 註冊表單 -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="registerUsername"><i class="fas fa-user"></i> 用戶名稱</label>
+                    <input type="text" id="registerUsername" placeholder="輸入用戶名稱">
+                </div>
+            
+                <div class="form-group">
+                    <label for="registerEmail"><i class="fas fa-envelope"></i> 電子郵件</label>
+                    <input type="email" id="registerEmail" placeholder="輸入電子郵件">
+                </div>
+            
+                <div class="form-group">
+                    <label for="registerPassword"><i class="fas fa-lock"></i> 密碼</label>
+                    <input type="password" id="registerPassword" placeholder="至少6個字符">
+                </div>
+            
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-user-plus"></i> 註冊
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p id="authMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用戶資訊欄位 -->
+    <div id="userInfo" class="user-info hidden">
+    <div class="user-details">
+        <i class="fas fa-user"></i>
+        <span id="currentUsername"></span>
+        <button id="logoutBtn" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i> 登出
+        </button>
+    </div>
+    </div>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-alt"></i> 行事曆與時間管理</h1>
+            <p class="subtitle">管理您的每月/每周任務，並透過視覺化圖表了解忙碌程度和工作時間趨勢</p>
+            <div class="global-auth-btn">
+                <button id="globalLoginBtn" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> 登入/註冊
+                </button>
+                <button id="globalLogoutBtn" class="btn-logout hidden">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </button>
+            </div>
+        </header>
+        
+        <!-- 新增視圖切換和日期導航 -->
+        <div class="view-controls">
+            <div class="view-buttons">
+                <button id="monthViewBtn" class="view-btn active"><i class="fas fa-calendar"></i> 月視圖</button>
+                <button id="weekViewBtn" class="view-btn"><i class="fas fa-calendar-week"></i> 周視圖</button>
+            </div>
+            
+            <div class="date-navigation">
+                <button id="prevBtn" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                <div class="current-date" id="currentDate">2023年11月</div>
+                <button id="nextBtn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            
+            <div class="today-btn-container">
+                <button id="todayBtn" class="today-btn"><i class="fas fa-calendar-day"></i> 今天</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 月視圖 -->
+            <section class="calendar-section" id="monthView">
+                <h2 class="section-title" id="monthTitle">本月行事曆</h2>
+                <div class="month-calendar">
+                    <div class="weekdays-header">
+                        <div class="weekday">日</div>
+                        <div class="weekday">一</div>
+                        <div class="weekday">二</div>
+                        <div class="weekday">三</div>
+                        <div class="weekday">四</div>
+                        <div class="weekday">五</div>
+                        <div class="weekday">六</div>
+                    </div>
+                    <div class="month-days" id="monthDays">
+                        <!-- 月份日期將由JavaScript動態生成 -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 周視圖 -->
+            <section class="calendar-section hidden" id="weekView">
+                <h2 class="section-title" id="weekTitle">本周行事曆</h2>
+                <div class="week-calendar" id="weekCalendar">
+                    <!-- 每周日期將由JavaScript動態生成 -->
+                </div>
+            </section>
+            
+            <section class="control-section">
+                <h2 class="section-title">新增任務</h2>
+                <div class="task-form">
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="taskTitle"><i class="fas fa-tasks"></i> 任務名稱</label>
+                            <input type="text" id="taskTitle" placeholder="輸入任務名稱" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskDate"><i class="fas fa-calendar-day"></i> 選擇日期</label>
+                            <input type="date" id="taskDate" required>
+                        </div>
+                        
+                        <div class="time-inputs">
+                            <div class="form-group">
+                                <label for="startTime"><i class="fas fa-clock"></i> 開始時間</label>
+                                <input type="time" id="startTime" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="endTime"><i class="fas fa-clock"></i> 結束時間</label>
+                                <input type="time" id="endTime" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskDesc"><i class="fas fa-align-left"></i> 任務描述 (選填)</label>
+                            <textarea id="taskDesc" placeholder="輸入任務詳細描述..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn"><i class="fas fa-plus-circle"></i> 新增任務</button>
+                    </form>
+                </div>
+                
+                <!-- 動態圖表標題 -->
+                <h2 class="section-title" id="chartTitle">每周忙碌程度視覺化</h2>
+                
+                <div class="chart-container">
+                    <canvas id="busyChart"></canvas>
+                </div>
+                
+                <!-- 新增：每周工作時間趨勢圖 -->
+                <div class="chart-container hidden" id="timeTrendContainer">
+                    <canvas id="timeTrendChart"></canvas>
+                </div>
+            </section>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value busy" id="busiestDayCount">0</div>
+                <div class="stat-label">最忙碌日任務數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTasks">0</div>
+                <div class="stat-label">總任務數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value free" id="freeDayCount">0</div>
+                <div class="stat-label">最空閒日任務數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalHours">0</div>
+                <div class="stat-label">本周總工作時數</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
